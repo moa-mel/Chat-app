@@ -80,19 +80,28 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          conversationId: payload.conversationId,
-          message: payload.message,
-          user: payload.from,
-          type: payload.type,
-          createdAt: payload.timestamp,
-        },
-      ]);
-    });
+      const newMessage: Message = {
+        id: payload.id ?? crypto.randomUUID(),
+        conversationId: payload.conversationId,
+        message: payload.message,
+        user: payload.from,
+        type: payload.type,
+        createdAt: payload.timestamp,
+      };
 
+      // Prevent duplicates by checking if message already exists
+      setMessages((prev) => {
+        const isDuplicate = prev.some(
+          (msg) =>
+            msg.message === newMessage.message &&
+            msg.user.id === newMessage.user.id &&
+            Math.abs(new Date(msg.createdAt).getTime() - new Date(newMessage.createdAt).getTime()) < 1000
+        );
+        
+        if (isDuplicate) return prev;
+        return [...prev, newMessage];
+      });
+    });
   };
 
   const sendMessage = (conversationId: string, message: string) => {
