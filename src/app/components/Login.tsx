@@ -2,16 +2,19 @@
 
 import React, { useState } from "react";
 import { useSocket } from "../context/SocketContext";
-import styles from "./Login.module.css";
+import "./Login.css";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import welcomeimg from "@/public/welcomeback.svg";
 
 const Login: React.FC = () => {
-   const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,13 +42,13 @@ const Login: React.FC = () => {
 
       // Store token and user info
       localStorage.setItem("accessToken", data.data.accessToken);
-      console.log('accessToken',data.data.accessToken);
+      console.log('accessToken', data.data.accessToken);
       localStorage.setItem("userId", String(data.data.meta.id));
       localStorage.setItem("userEmail", data.data.meta.email);
 
       // Navigate to user selection or chat
       router.push("/select-user"); // or wherever you select who to chat with
-      
+
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -54,33 +57,52 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className={styles.loginContainer}>
-      <h1>Login to Chat 👋</h1>
+    <div className='main-login'>
+      <div className="login-contain">
+        <div className="left-side">
+          <form onSubmit={handleSubmit} name='signin_form'>
+            <input
+              type='text'
+              value={email}
+              required
+              placeholder="E-mail"
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+            <input
+              type='password'
+              value={password}
+              required
+              placeholder="Enter your password"
+              onChange={(e) => setPassword(e.target.value)} />
 
-        <input
-          type="password"
-          placeholder="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+            <button type="submit" className="sub_butt">
+              <span> {loading ? "Logining up..." : "Login"} </span>
+            </button>
+            <p className="span">
+              Don't have an account?
+              <Link href="/sign-up">Sign up</Link>
+            </p>
+          </form>
+        </div>
+        <div className="right-side">
+          <div className="welcomeNote">
+            <h3>Welcome Back!</h3>
+          </div>
+          <div className="welcomeImg">
+            <Image
+              src={welcomeimg}
+              id='wel-img-id'
+              alt="Welcome back"
+              width={400}
+              height={300}
+              style={{ width: '100%', height: 'auto' }}
+              priority
+            />
+          </div>
+        </div>
 
-        {error && <p className={styles.error}>{error}</p>}
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-        <p>Don't have an account? <Link href="/sign-up">Sign Up</Link></p>
-      </form>
+      </div>
     </div>
   );
 };

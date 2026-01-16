@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import styles from "./Login.module.css";
-import { useRouter} from "next/navigation";
+import "./Login.css";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import welcomeimg from "@/public/welcomeback.svg";
 
 const SignUp: React.FC = () => {
     const [firstName, setFirstName] = useState("");
@@ -53,50 +55,69 @@ const SignUp: React.FC = () => {
     };
 
     return (
-        <div className={styles.loginContainer}>
-            <h1>Sign Up to hop on a chat 😉</h1>
+        <div className='main-login'>
+            <div className="login-contain">
+                <div className="left-side">
+                    <form onSubmit={handleSubmit} name='signin_form'>
+                        <input
+                            type="text"
+                            placeholder="First Name"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            required
+                        />
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                />
+                        <input
+                            type="text"
+                            placeholder="Last Name"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            required
+                        />
 
-                <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                />
+                        <input
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
+                        <button type="submit" className="sub_butt">
+                            <span> {loading ? "Signing up..." : "Sign Up"} </span>
+                        </button>
+                        <p className="span">
+                            Already  have an account?
+                            <Link href="/login">Login</Link>
+                        </p>
+                    </form>
+                </div>
+                <div className="right-side">
+                    <div className="welcomeNote">
+                        <h3>Sign Up to hop on a chat 😉</h3>
+                    </div>
+                    <div className="welcomeImg">
+                        <Image
+                            src={welcomeimg}
+                            id='wel-img-id'
+                            alt="Welcome back"
+                            width={400}
+                            height={300}
+                            style={{ width: '100%', height: 'auto' }}
+                            priority
+                        />
+                    </div>
+                </div>
 
-                {error && <p className={styles.error}>{error}</p>}
-
-                <button type="submit" disabled={loading}>
-                    {loading ? "Signing up..." : "Sign Up"}
-                </button>
-
-                <p>Already have an account? <Link href="/login">Login</Link></p>
-            </form>
+            </div>
         </div>
     );
 };

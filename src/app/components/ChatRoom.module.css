@@ -9,12 +9,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  background-color: #4a90e2;
+  background-color: #4dd6b6;
   color: white;
+  font-style: italic;
 }
 
 .chatHeader h2 {
   margin: 0;
+  font-style: italic;
 }
 
 .chatMain {
@@ -48,7 +50,7 @@
 
 .messageForm button {
   padding: 0 20px;
-  background-color: #4a90e2;
+  background-color: #4dd6b6;
   color: white;
   border: none;
   border-radius: 4px;
