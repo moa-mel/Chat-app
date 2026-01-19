@@ -9,7 +9,7 @@ interface User {
 
 interface Message {
   id: string;
-  message: string;
+  content: string;
   senderId: Number,
   sender: {
     id: string;
@@ -23,7 +23,23 @@ interface MessageItemProps {
   isOwnMessage: boolean;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage }) => {
+interface MessageItemProps {
+  message: Message;
+  isOwnMessage: boolean;
+  isTyping?: boolean;
+}
+
+const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage , isTyping}) => {
+  if (isTyping) {
+    return (
+      <div className={`${styles.messageItem} ${styles.typingIndicator} ${isOwnMessage ? styles.ownMessage : ''}`}>
+        <div className={styles.typingDot}></div>
+        <div className={styles.typingDot}></div>
+        <div className={styles.typingDot}></div>
+      </div>
+    );
+  }
+
   const isSystemMessage = message.sender.id === 'system';
 
   const formatTime = (date: string) =>
@@ -36,7 +52,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage }) => {
   if (isSystemMessage) {
     return (
       <div className={styles.systemMessage}>
-        <p>{message.message}</p>
+        <p>{message.content}</p>
         <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
       </div>
     );
@@ -46,7 +62,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage }) => {
     <div className={`${styles.messageItem} ${isOwnMessage ? styles.ownMessage : ''}`}>
       <div className={styles.messageContent}>
         {!isOwnMessage && <p className={styles.username}>{message.sender.email}</p>}
-        <p className={styles.messageText}>{message.message}</p>
+        <p className={styles.messageText}>{message.content}</p>
         <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
       </div>
     </div>

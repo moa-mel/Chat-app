@@ -11,7 +11,7 @@ export interface User {
 export interface Message {
   id: string;
   conversationId: string;
-  message: string;
+  content: string;
   senderId: Number,
   type: "TEXT";
   sender: User;
@@ -69,7 +69,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
           {
             id: crypto.randomUUID(),
             conversationId: payload.conversationId ?? "system",
-            message: payload.error ?? payload.message ?? "System message",
+            content: payload.error ?? payload.message ?? "System message",
             senderId: payload.from.id,
             sender: {
               id: "system",
@@ -86,7 +86,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         id: payload.id ?? crypto.randomUUID(),
         conversationId: payload.conversationId,
         senderId: payload.from.id,
-        message: payload.message,
+        content: payload.message,
         sender: payload.from,
         type: payload.type,
         createdAt: payload.timestamp,
@@ -96,7 +96,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       setMessages((prev) => {
         const isDuplicate = prev.some(
           (msg) =>
-            msg.message === newMessage.message &&
+            msg.content=== newMessage.content &&
             msg.sender.id === newMessage.sender.id &&
             Math.abs(new Date(msg.createdAt).getTime() - new Date(newMessage.createdAt).getTime()) < 1000
         );

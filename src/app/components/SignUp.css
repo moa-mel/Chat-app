@@ -128,7 +128,7 @@
           transform: translateY(-5px);
 }
 
-.main-login .login-contain .right-side .welcomeNote h3 {
+.main-login .login-contain .left-side .welcomeNote h3 {
   margin-left: 1rem;
   color: #666;
   text-align: center;

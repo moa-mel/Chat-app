@@ -60,6 +60,9 @@ const Login: React.FC = () => {
     <div className='main-login'>
       <div className="login-contain">
         <div className="left-side">
+          <div className="welcomeNote">
+            <h3>Welcome Back!</h3>
+          </div>
           <form onSubmit={handleSubmit} name='signin_form'>
             <input
               type='text'
@@ -86,9 +89,6 @@ const Login: React.FC = () => {
           </form>
         </div>
         <div className="right-side">
-          <div className="welcomeNote">
-            <h3>Welcome Back!</h3>
-          </div>
           <div className="welcomeImg">
             <Image
               src={welcomeimg}
