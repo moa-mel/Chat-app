@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./SelectUser.module.css";
@@ -19,6 +19,11 @@ export default function SelectUser() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isWsConnected, setIsWsConnected] = useState(false);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
+  const reconnectTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
   const router = useRouter();
 
   useEffect(() => {
@@ -104,6 +109,87 @@ export default function SelectUser() {
     };
 
     fetchConversations();
+
+    // Initialize WebSocket connection
+    const initializeWebSocket = () => {
+      try {
+        // Replace with your WebSocket URL
+        const wsUrl = 'wss://your-websocket-url.com';
+        const socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          console.log('WebSocket Connected');
+          setIsWsConnected(true);
+          reconnectAttempts.current = 0; // Reset reconnect attempts on successful connection
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+            // Handle incoming WebSocket messages here
+            console.log('WebSocket message received:', message);
+            
+            // If you need to update the UI based on WebSocket messages, do it here
+            // For example, refresh conversations when a new message arrives
+            if (message.type === 'NEW_MESSAGE') {
+              fetchConversations();
+            }
+          } catch (err) {
+            console.error('Error processing WebSocket message:', err);
+          }
+        };
+
+        socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setIsWsConnected(false);
+        };
+
+        socket.onclose = (event) => {
+          console.log('WebSocket disconnected:', event.code, event.reason);
+          setIsWsConnected(false);
+          
+          // Attempt to reconnect with exponential backoff
+          if (reconnectAttempts.current < maxReconnectAttempts) {
+            const timeout = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+            console.log(`Attempting to reconnect in ${timeout}ms...`);
+            
+            reconnectTimeout.current = setTimeout(() => {
+              reconnectAttempts.current++;
+              initializeWebSocket();
+            }, timeout);
+          } else {
+            console.error('Max reconnection attempts reached');
+          }
+        };
+
+        setWs(socket);
+
+        // Cleanup function
+        return () => {
+          if (socket) {
+            socket.close();
+          }
+          if (reconnectTimeout.current) {
+            clearTimeout(reconnectTimeout.current);
+          }
+        };
+      } catch (err) {
+        console.error('Error initializing WebSocket:', err);
+      }
+    };
+
+    // Initialize WebSocket connection
+    initializeWebSocket();
+
+    // Cleanup function
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+      if (reconnectTimeout.current) {
+        clearTimeout(reconnectTimeout.current);
+      }
+    };
   }, []);
 
   const startChat = async (userId: string) => {
