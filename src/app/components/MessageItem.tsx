@@ -10,7 +10,8 @@ interface User {
 interface Message {
   id: string;
   message: string;
-  user: {
+  senderId: Number,
+  sender: {
     id: string;
     email: string;
   };
@@ -23,7 +24,7 @@ interface MessageItemProps {
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage }) => {
-  const isSystemMessage = message.user.id === 'system';
+  const isSystemMessage = message.sender.id === 'system';
 
   const formatTime = (date: string) =>
     new Date(date).toLocaleTimeString([], {
@@ -44,7 +45,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage }) => {
   return (
     <div className={`${styles.messageItem} ${isOwnMessage ? styles.ownMessage : ''}`}>
       <div className={styles.messageContent}>
-        {!isOwnMessage && <p className={styles.username}>{message.user.email}</p>}
+        {!isOwnMessage && <p className={styles.username}>{message.sender.email}</p>}
         <p className={styles.messageText}>{message.message}</p>
         <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
       </div>

@@ -49,7 +49,7 @@ const ChatRoom: React.FC = () => {
           <MessageItem
             key={msg.id}
             message={msg}
-            isOwnMessage={msg.user.id === currentUser?.id}
+            isOwnMessage={msg.sender.id === currentUser?.id}
           />
         ))}
         <div ref={messagesEndRef} />
