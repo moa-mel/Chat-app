@@ -48,23 +48,50 @@ export default function SelectUser() {
 
         const result = await response.json();
         
+        console.log('API Response:', result); // Log the full response
+        
         if (result.success && result.data) {
           // Transform the data to match our User interface
-          const formattedUsers = result.data.map((conv: any) => {
-            // Determine the other user in the conversation
-            const otherUser = conv.participants.find(
-              (p: any) => p.id !== currentUserId
-            );
-            
-            return {
-              id: otherUser?.id || '',
-              email: otherUser?.email || 'Unknown User',
-              name: otherUser?.name || otherUser?.email || 'Unknown User',
-              lastMessage: conv.lastMessage?.content,
-              lastMessageTime: conv.lastMessage?.createdAt,
-              unreadCount: conv.unreadCount
-            };
-          });
+          const formattedUsers = result.data
+            .filter((conv: any) => {
+              // Skip conversations without users or with empty users array
+              if (!conv.users || !Array.isArray(conv.users)) {
+                console.warn('Invalid users in conversation:', conv);
+                return false;
+              }
+              return true;
+            })
+            .map((conv: any) => {
+              try {
+                // Find the other user in the conversation
+                const otherUser = conv.users.find(
+                  (p: any) => p && p.id && p.id.toString() !== currentUserId
+                );
+
+                if (!otherUser) {
+                  console.warn('No other user found in conversation:', conv);
+                  return null;
+                }
+
+                // Combine first and last name for display
+                const fullName = [otherUser.firstName, otherUser.lastName]
+                  .filter(Boolean)
+                  .join(' ');
+
+                return {
+                  id: otherUser.id.toString(),
+                  email: otherUser.email || 'Unknown User',
+                  name: fullName || otherUser.identifier || 'Unknown User',
+                  lastMessage: conv.lastMessage?.content,
+                  lastMessageTime: conv.lastMessage?.createdAt,
+                  unreadCount: conv.unreadCount || 0
+                };
+              } catch (err) {
+                console.error('Error processing conversation:', conv, err);
+                return null;
+              }
+            })
+            .filter(Boolean); // Remove any null entries from the map
           
           setUsers(formattedUsers);
         }
