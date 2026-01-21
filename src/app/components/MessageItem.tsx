@@ -29,7 +29,13 @@ interface MessageItemProps {
   isTyping?: boolean;
 }
 
-const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage , isTyping}) => {
+const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage, isTyping }) => {
+  console.log('MessageItem render:', { 
+    messageId: message.id, 
+    senderId: message.sender.id, 
+    isOwnMessage,
+    isTyping
+  });
   if (isTyping) {
     return (
       <div className={`${styles.messageItem} ${styles.typingIndicator} ${isOwnMessage ? styles.ownMessage : ''}`}>
@@ -61,9 +67,13 @@ const MessageItem: React.FC<MessageItemProps> = ({ message, isOwnMessage , isTyp
   return (
     <div className={`${styles.messageItem} ${isOwnMessage ? styles.ownMessage : ''}`}>
       <div className={styles.messageContent}>
-        {!isOwnMessage && <p className={styles.username}>{message.sender.email}</p>}
+        {!isOwnMessage && message.sender?.email && (
+          <p className={styles.username}>{message.sender.email}</p>
+        )}
         <p className={styles.messageText}>{message.content}</p>
-        <span className={styles.timestamp}>{formatTime(message.createdAt)}</span>
+        <span className={styles.timestamp}>
+          {formatTime(message.createdAt)}
+        </span>
       </div>
     </div>
   );

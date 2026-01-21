@@ -88,7 +88,18 @@ const ChatRoom: React.FC = () => {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !conversationId) return;
+    if (!newMessage.trim() || !conversationId) {
+      console.log("Message or conversationId is empty", {
+        hasMessage: !!newMessage.trim(),
+        conversationId
+      });
+      return;
+    }
+
+    console.log("Attempting to send message", {
+      conversationId,
+      message: newMessage
+    });
 
     sendMessage(conversationId, newMessage);
     setNewMessage("");
@@ -96,6 +107,7 @@ const ChatRoom: React.FC = () => {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    console.log("Messages updated:", messages);
   }, [messages]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,13 +143,23 @@ const ChatRoom: React.FC = () => {
       </div>
 
       <div className={styles.chatMessages}>
-        {messages.map((msg) => (
-          <MessageItem
-            key={msg.id}
-            message={msg}
-            isOwnMessage={msg.sender.id === currentUser?.id}
-          />
-        ))}
+        {messages.map((msg) => {
+          const isOwn = String(msg.sender.id) === String(currentUser?.id);
+          console.log('Message:', {
+            messageId: msg.id,
+            senderId: msg.sender.id,
+            currentUserId: currentUser?.id,
+            isOwn,
+            type: { senderType: typeof msg.sender.id, currentType: typeof currentUser?.id }
+          });
+          return (
+            <MessageItem
+              key={msg.id}
+              message={msg}
+              isOwnMessage={isOwn}
+            />
+          );
+        })}
 
         {Array.from(typingUsers).map(userId => {
           // Find the user in the messages to get their name
