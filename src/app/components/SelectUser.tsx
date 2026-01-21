@@ -300,7 +300,7 @@ export default function SelectUser() {
                     )}
                   </div>
                   <div className={styles.userLastMessage}>
-                    {user.lastMessage || 'No messages yet'}
+                    {user.lastMessage || 'Message'}
                   </div>
                 </div>
                 {user.unreadCount ? (
