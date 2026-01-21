@@ -20,22 +20,40 @@ const ChatRoom: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-  const conversationId = localStorage.getItem("conversationId") || '';
+  const [conversationId, setConversationId] = useState<string>('');
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    const userId = localStorage.getItem("userId");
-    const email = localStorage.getItem("userEmail");
+    setConversationId(localStorage.getItem("conversationId") || '');
+  }, []);
 
-    if (!token || !userId || !conversationId) return;
+  // Get user data from localStorage once on component mount
+  const [userData, setUserData] = useState<{ token: string | null; userId: string | null; email: string | null }>({
+    token: null,
+    userId: null,
+    email: null
+  });
 
-    joinChat(
-      { id: userId, email: email ?? "" },
-      token,
-      conversationId
-    );
+  // Set user data on component mount
+  useEffect(() => {
+    setUserData({
+      token: localStorage.getItem("accessToken"),
+      userId: localStorage.getItem("userId"),
+      email: localStorage.getItem("userEmail")
+    });
+  }, []);
 
+  // Handle joining chat when conversationId or userData changes
+  useEffect(() => {
+    const { token, userId, email } = userData;
+
+    if (!token || !userId || !conversationId || !email) return;
+
+    joinChat({ id: userId, email }, token, conversationId);
+  }, [conversationId, userData.token, userData.userId, userData.email]);
+
+
+  useEffect(() => {
     const handleTyping = (data: { conversationId: string; userId: string }) => {
       if (data.conversationId === conversationId && data.userId !== currentUser?.id) {
         setTypingUsers(prev => {
@@ -89,7 +107,7 @@ const ChatRoom: React.FC = () => {
     }
 
     if (socket && conversationId) {
-      socket.emit('typing', { 
+      socket.emit('typing', {
         conversationId,
         userId: currentUser?.id || 'unknown'
       });
@@ -127,8 +145,8 @@ const ChatRoom: React.FC = () => {
           return (
             <MessageItem
               key={`typing-${userId}`}
-              message={{ 
-                id: `typing-${userId}`, 
+              message={{
+                id: `typing-${userId}`,
                 content: 'typing...',
                 senderId: Number(userId),
                 sender: typingUser || { id: userId, email: '...' },

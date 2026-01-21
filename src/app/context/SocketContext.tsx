@@ -35,20 +35,22 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const socketRef = React.useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const joinChat = (user: User, token: string, conversationId: string) => {
-    if (socket) socket.disconnect();
+  const joinChat = React.useCallback(
+  (user: User, token: string, conversationId: string) => {
+    // Disconnect existing socket
+    socketRef.current?.disconnect();
 
     const newSocket = io("https://lai-chat.onrender.com", {
       transports: ["websocket"],
       auth: { token },
     });
 
-    setSocket(newSocket);
+    socketRef.current = newSocket;
     setCurrentUser(user);
 
     newSocket.on("connect", () => {
@@ -63,54 +65,39 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     newSocket.on("roomMessage", (payload: any) => {
       if (!payload) return;
 
-      if (!payload.from) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            conversationId: payload.conversationId ?? "system",
-            content: payload.error ?? payload.message ?? "System message",
-            senderId: payload.from.id,
-            sender: {
-              id: "system",
-              email: "System",
-            },
-            type: "TEXT",
-            createdAt: new Date().toISOString(),
-          },
-        ]);
-        return;
-      }
-
       const newMessage: Message = {
         id: payload.id ?? crypto.randomUUID(),
-        conversationId: payload.conversationId,
-        senderId: payload.from.id,
-        content: payload.message,
-        sender: payload.from,
-        type: payload.type,
-        createdAt: payload.timestamp,
+        conversationId: payload.conversationId ?? "system",
+        senderId: payload.from?.id ?? "system",
+        content: payload.message ?? payload.error ?? "System message",
+        sender: payload.from ?? { id: "system", email: "System" },
+        type: "TEXT",
+        createdAt: payload.timestamp ?? new Date().toISOString(),
       };
 
-      // Prevent duplicates by checking if message already exists
       setMessages((prev) => {
         const isDuplicate = prev.some(
           (msg) =>
-            msg.content=== newMessage.content &&
+            msg.content === newMessage.content &&
             msg.sender.id === newMessage.sender.id &&
-            Math.abs(new Date(msg.createdAt).getTime() - new Date(newMessage.createdAt).getTime()) < 1000
+            Math.abs(
+              new Date(msg.createdAt).getTime() -
+                new Date(newMessage.createdAt).getTime()
+            ) < 1000
         );
-        
-        if (isDuplicate) return prev;
-        return [...prev, newMessage];
+
+        return isDuplicate ? prev : [...prev, newMessage];
       });
     });
-  };
+  },
+  []
+);
+
 
   const sendMessage = (conversationId: string, message: string) => {
-    if (!socket) return;
+    if (!socketRef.current) return;
 
-    socket.emit("roomMessage", {
+    socketRef.current.emit("roomMessage", {
       conversationId,
       message,
       type: "TEXT",
@@ -118,22 +105,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const leaveChat = () => {
-    socket?.disconnect();
-    setSocket(null);
+    socketRef.current?.disconnect();
     setMessages([]);
     setCurrentUser(null);
   };
 
   useEffect(() => {
-    return () => {
-      socket?.disconnect();
-    };
-  }, [socket]);
+  return () => {
+    socketRef.current?.disconnect();
+  };
+}, []);
+
 
   return (
     <SocketContext.Provider
       value={{
-        socket,
+        socket: socketRef.current,
         isConnected,
         messages,
         currentUser,
