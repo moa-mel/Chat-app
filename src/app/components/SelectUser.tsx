@@ -7,8 +7,10 @@ import styles from "./SelectUser.module.css";
 
 interface User {
   id: string;
+  identifier: string;
   email: string;
   name: string;
+  conversationId?: string;
   avatar?: string;
   lastMessage?: string;
   lastMessageTime?: string;
@@ -52,9 +54,9 @@ export default function SelectUser() {
         }
 
         const result = await response.json();
-        
+
         console.log('API Response:', result); // Log the full response
-        
+
         if (result.success && result.data) {
           // Transform the data to match our User interface
           const formattedUsers = result.data
@@ -87,6 +89,8 @@ export default function SelectUser() {
                   id: otherUser.id.toString(),
                   email: otherUser.email || 'Unknown User',
                   name: fullName || otherUser.identifier || 'Unknown User',
+                  identifier: otherUser.identifier,
+                  conversationId: conv.id,
                   lastMessage: conv.lastMessage?.content,
                   lastMessageTime: conv.lastMessage?.createdAt,
                   unreadCount: conv.unreadCount || 0
@@ -97,8 +101,9 @@ export default function SelectUser() {
               }
             })
             .filter(Boolean); // Remove any null entries from the map
-          
+
           setUsers(formattedUsers);
+
         }
       } catch (err: any) {
         console.error('Error fetching conversations:', err);
@@ -114,7 +119,7 @@ export default function SelectUser() {
     const initializeWebSocket = () => {
       try {
         // Replace with your WebSocket URL
-        const wsUrl = 'wss://your-websocket-url.com';
+        const wsUrl = 'wss://lai-chat.onrender.com';
         const socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
@@ -128,7 +133,7 @@ export default function SelectUser() {
             const message = JSON.parse(event.data);
             // Handle incoming WebSocket messages here
             console.log('WebSocket message received:', message);
-            
+
             // If you need to update the UI based on WebSocket messages, do it here
             // For example, refresh conversations when a new message arrives
             if (message.type === 'NEW_MESSAGE') {
@@ -147,12 +152,12 @@ export default function SelectUser() {
         socket.onclose = (event) => {
           console.log('WebSocket disconnected:', event.code, event.reason);
           setIsWsConnected(false);
-          
+
           // Attempt to reconnect with exponential backoff
           if (reconnectAttempts.current < maxReconnectAttempts) {
             const timeout = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
             console.log(`Attempting to reconnect in ${timeout}ms...`);
-            
+
             reconnectTimeout.current = setTimeout(() => {
               reconnectAttempts.current++;
               initializeWebSocket();
@@ -192,7 +197,7 @@ export default function SelectUser() {
     };
   }, []);
 
-  const startChat = async (userId: string) => {
+  const startChat = async (userId: string, userIdentifier: string) => {
     const token = localStorage.getItem("accessToken");
 
     if (!token) {
@@ -204,6 +209,10 @@ export default function SelectUser() {
     setError(null);
 
     try {
+      // Store the clicked user's identifier
+      localStorage.setItem("userIdentifier", userIdentifier);
+      console.log("userIdentifier", userIdentifier);
+
       const res = await fetch(
         "https://lai-chat.onrender.com/api/v1/chat/start",
         {
@@ -263,7 +272,7 @@ export default function SelectUser() {
     <div className={styles.container}>
       <div className={styles.formContainer}>
         <h2 className={styles.title}>Chats</h2>
-        
+
         {loading ? (
           <div className={styles.loading}>Loading conversations...</div>
         ) : error ? (
@@ -273,10 +282,10 @@ export default function SelectUser() {
         ) : (
           <div className={styles.userList}>
             {users.map((user) => (
-              <div 
-                key={user.id} 
+              <div
+                key={user.id}
                 className={styles.userItem}
-                onClick={() => startChat(user.id)}
+                onClick={() => startChat(user.id, user.identifier)}
               >
                 <div className={styles.avatar}>
                   {user.name.charAt(0).toUpperCase()}
